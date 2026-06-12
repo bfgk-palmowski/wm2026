@@ -367,10 +367,7 @@ async function fetchWithTimeout(url, opts, ms=5000) {
 }
 
 async function loadLiveData() {
-  // Show static data immediately – no waiting
-  GAMES = STATIC_GAMES.map(g=>({...g}));
   setPill('loading','Lade…');
-  render();
 
   // Try to get token from storage
   let token = null;
@@ -831,6 +828,9 @@ function showInstallBanner() {
 window.addEventListener('load', () => {
   const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
   if(!standalone) showInstallBanner();
+  // Render static data immediately, then try API in background
+  GAMES = STATIC_GAMES.map(g => ({...g}));
+  render();
   loadLiveData();
 });
 
