@@ -358,6 +358,24 @@ function mapGamesFromAPI(apiGames) {
   });
 }
 
+function setPill(type, txt) {
+  const p = document.getElementById('statusPill');
+  if(!p) return;
+  p.className = `status-pill ${type}`;
+  p.textContent = txt;
+}
+
+function showApiBanner(success) {
+  const b = document.getElementById('apiBanner');
+  if(!b) return;
+  const time = lastUpdate ? lastUpdate.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+  if(success) {
+    b.innerHTML = `<div class="api-banner"><span class="api-dot"></span>Live-Daten · Stand: ${time}<button class="refresh-btn" onclick="loadLiveData()">↺ Aktualisieren</button></div>`;
+  } else {
+    b.innerHTML = `<div class="api-banner"><span class="api-dot grey"></span>Spielplan offline · Ergebnisse aktuell nicht verfügbar<button class="refresh-btn" onclick="loadLiveData()">↺ Erneut versuchen</button></div>`;
+  }
+}
+
 async function fetchWithTimeout(url, opts, ms=5000) {
   const ctrl = new AbortController();
   const tid = setTimeout(()=>ctrl.abort(), ms);
