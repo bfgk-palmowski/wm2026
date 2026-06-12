@@ -334,27 +334,69 @@ const TEAM_ID = {
 };
 
 function mapGamesFromAPI(apiGames) {
-  const byId = {};
+  // The API creates MULTIPLE entries per fixture (live updates appended as new rows).
+  // So we match by TEAM PAIR, preferring: finished > inPlay > has score > newest.
+  const byPair = {};
+
+  const rank = e => e.finished ? 3 : e.inPlay ? 2 : (e.sH !== null ? 1 : 0);
+
   for(const ag of apiGames) {
-    const apiId = String(ag.id || '');
-    if(!apiId) continue;
-    const finished = String(ag.finished||'').toUpperCase()==='TRUE';
-    const inPlay = ag.time_elapsed && ag.time_elapsed!=='notstarted' && ag.time_elapsed!=='fulltime' && !finished;
-    let sH=null, sA=null;
-    if((finished||inPlay) && ag.home_score!=null && String(ag.home_score)!=='null') {
-      sH=Number(ag.home_score); sA=Number(ag.away_score);
-      if(isNaN(sH)||isNaN(sA)){sH=null;sA=null;}
+    const hId = String(ag.home_team_id || '');
+    const aId = String(ag.away_team_id || '');
+    if(!hId || !aId) continue;
+    const key = `${hId}|${aId}`;
+
+    const finished = String(ag.finished||'').toUpperCase() === 'TRUE';
+    const inPlay = ag.time_elapsed && ag.time_elapsed !== 'notstarted' && ag.time_elapsed !== 'fulltime' && !finished;
+    let sH = null, sA = null;
+    const rawH = ag.home_score, rawA = ag.away_score;
+    if(rawH != null && String(rawH) !== 'null' && rawH !== '') {
+      const nH = Number(rawH), nA = Number(rawA);
+      if(!isNaN(nH) && !isNaN(nA) && (finished || inPlay || nH > 0 || nA > 0)) {
+        sH = nH; sA = nA;
+      }
     }
-    const ps = s=>(!s||s==='null'||s==='')?null:s;
-    byId[apiId]={sH,sA,
-      scorersH:ps(ag.home_scorers), scorersA:ps(ag.away_scorers),
-      timeElapsed:(ag.time_elapsed&&ag.time_elapsed!=='notstarted')?ag.time_elapsed:null,
+    const ps = s => (!s || s === 'null' || s === '') ? null : s;
+    const entry = {
+      sH, sA, finished, inPlay,
+      scorersH: ps(ag.home_scorers),
+      scorersA: ps(ag.away_scorers),
+      timeElapsed: (ag.time_elapsed && ag.time_elapsed !== 'notstarted') ? ag.time_elapsed : null,
     };
+
+    const prev = byPair[key];
+    if(!prev || rank(entry) > rank(prev)) {
+      byPair[key] = entry;
+    } else if(rank(entry) === rank(prev) && entry.sH !== null) {
+      // Same rank: prefer the later one (live updates come later in list)
+      byPair[key] = entry;
+    }
   }
-  return STATIC_GAMES.map(sg=>{
-    const api=byId[String(sg.id)];
+
+  // Reverse lookup: our code → API team id
+  const CODE_TO_ID = {};
+  Object.keys(TEAM_ID).forEach(id => { CODE_TO_ID[TEAM_ID[id]] = id; });
+
+  return STATIC_GAMES.map(sg => {
+    const hId = CODE_TO_ID[sg.h];
+    const aId = CODE_TO_ID[sg.a];
+    if(!hId || !aId) return {...sg};
+    // Try both orientations (API might have home/away flipped)
+    let api = byPair[`${hId}|${aId}`];
+    let flipped = false;
+    if(!api) {
+      api = byPair[`${aId}|${hId}`];
+      flipped = true;
+    }
     if(!api) return {...sg};
-    return {...sg,...api};
+    if(flipped) {
+      return {...sg, sH: api.sA, sA: api.sH,
+        scorersH: api.scorersA, scorersA: api.scorersH,
+        timeElapsed: api.timeElapsed};
+    }
+    return {...sg, sH: api.sH, sA: api.sA,
+      scorersH: api.scorersH, scorersA: api.scorersA,
+      timeElapsed: api.timeElapsed};
   });
 }
 
