@@ -93,6 +93,9 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:
 .ranking-wrap{padding:10px}
 .rank-table{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
 .rank-header{background:var(--accent);color:#ffffff;font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:8px 13px;display:flex;align-items:center;justify-content:space-between}
+.scorers{display:flex;justify-content:space-between;margin-top:7px;padding-top:6px;border-top:1px solid var(--border);gap:6px}
+.scorers-h{font-size:.68rem;color:var(--muted);flex:1;line-height:1.5}
+.scorers-a{font-size:.68rem;color:var(--muted);flex:1;text-align:right;line-height:1.5}
 .rank-pos{width:24px;text-align:center;font-size:.75rem;color:var(--muted);font-weight:700}
 .rank-pos.top{color:var(--accent);font-weight:900}
 .rank-flag{font-size:1.1rem;margin:0 4px}
@@ -358,21 +361,29 @@ function mapGamesFromAPI(apiGames) {
       sA = Number(rawA);
       if(isNaN(sH) || isNaN(sA)) { sH = null; sA = null; }
     }
+    // Parse scorers – API returns comma-separated string like "Müller 23', Havertz 67'"
+    const parseScorers = s => (!s || s === 'null' || s === '') ? null : s;
+    const timeElapsed = (ag.time_elapsed && ag.time_elapsed !== 'notstarted') ? ag.time_elapsed : null;
+
     byId[apiId] = {sH, sA, finished, inPlay,
+      scorersH: parseScorers(ag.home_scorers),
+      scorersA: parseScorers(ag.away_scorers),
+      timeElapsed,
       homeCode: TEAM_ID[String(ag.home_team_id)] || null,
       awayCode: TEAM_ID[String(ag.away_team_id)] || null,
     };
   }
 
-  // Clone static games and inject scores
+  // Clone static games and inject scores + scorers + time
   return STATIC_GAMES.map(sg => {
     const api = byId[String(sg.id)];
     if(!api) return {...sg};
-    // If API has team codes, verify match (sanity check)
     if(api.homeCode && api.homeCode !== sg.h) {
       console.warn(`ID mismatch game ${sg.id}: static=${sg.h} api=${api.homeCode}`);
     }
-    return {...sg, sH: api.sH, sA: api.sA};
+    return {...sg, sH: api.sH, sA: api.sA,
+      scorersH: api.scorersH, scorersA: api.scorersA,
+      timeElapsed: api.timeElapsed};
   });
 }
 
@@ -578,10 +589,12 @@ function render(){
       const cc=live?'is-live':tod?'is-today':past?'is-past':'';
       const hC=isCode(g.h),aC=isCode(g.a);
       const hasScore=g.sH!==null&&g.sA!==null;
+      const liveMin = live && g.timeElapsed && g.timeElapsed !== 'fulltime' && g.timeElapsed !== 'notstarted' ? g.timeElapsed+"'" : null;
+      const scorerLine = (g.scorersH || g.scorersA) ? `<div class="scorers"><span class="scorers-h">${g.scorersH ? '⚽ '+g.scorersH : ''}</span><span class="scorers-a">${g.scorersA ? g.scorersA+' ⚽' : ''}</span></div>` : '';
       html+=`<div class="card ${cc}">
         <div class="card-top">
           <span class="phase-lbl">${phLbl(g.ph,g.g)}</span>
-          <div class="card-right">${live?'<span class="live-pill">LIVE</span>':''}
+          <div class="card-right">${liveMin ? `<span class="live-pill">${liveMin}</span>` : live ? '<span class="live-pill">LIVE</span>' : ''}
             <div class="time-venue">${g.t} MESZ · ${fsjTime(g.t)} FSJ<br><span style="font-size:.58rem;opacity:.7">${g.v||''}</span></div>
           </div>
         </div>
@@ -590,6 +603,7 @@ function render(){
           <div class="score-mid">${hasScore?`<span class="sc">${g.sH}</span><span class="sc-sep">:</span><span class="sc">${g.sA}</span>`:`<span class="vs-txt">${live?'●':'vs'}</span>`}</div>
           <div class="team r">${aC?`<span class="flag">${F(g.a)}</span>`:''}<span class="tname">${aC?N(g.a):g.a}</span></div>
         </div>
+        ${scorerLine}
       </div>`;
     });
   });
