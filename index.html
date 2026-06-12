@@ -389,48 +389,69 @@ async function fetchWithTimeout(url, opts, ms=5000) {
 async function loadLiveData() {
   setPill('loading','Lade…');
 
-  // Try to get token from storage
   let token = null;
   try { token = localStorage.getItem('wm26_token'); } catch(e){}
 
-  // If no token, register quickly
-  if(!token) {
-    try {
-      const r = await fetchWithTimeout(`${API}/auth/register`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name:"WM2026App",email:`wm${Date.now()}@app.local`,password:"WM2026!app"})
-      }, 5000);
-      if(r.ok){
-        const d=await r.json();
-        token=d.token||d.access_token||d.data?.token;
-        if(token) try{localStorage.setItem('wm26_token',token);}catch(e){}
-      }
-    } catch(e){ console.warn('register failed:',e.message); }
-  }
+  const parseGames = d => Array.isArray(d) ? d : (d.data||d.matches||d.games||[]);
 
-  // Fetch games
-  try {
-    const headers={'Content-Type':'application/json','Accept':'application/json'};
-    if(token) headers['Authorization']=`Bearer ${token}`;
-    const r = await fetchWithTimeout(`${API}/get/games`, {headers}, 5000);
-    if(r.ok){
-      const data=await r.json();
-      const games=Array.isArray(data)?data:(data.data||data.matches||data.games||[]);
-      if(games.length>0){
-        GAMES=mapGamesFromAPI(games);
-        lastUpdate=new Date();
-        const liveCount=GAMES.filter(g=>isLive(g.d,g.t)).length;
+  const sources = [
+    // 1) Direct API (with stored token if present)
+    async () => {
+      const headers = {'Accept':'application/json'};
+      if(token) headers['Authorization'] = `Bearer ${token}`;
+      const r = await fetchWithTimeout(`${API}/get/games`, {headers}, 5000);
+      if(!r.ok) throw new Error(`direct ${r.status}`);
+      return parseGames(await r.json());
+    },
+    // 2) Fresh registration, then direct
+    async () => {
+      const r = await fetchWithTimeout(`${API}/auth/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name:"WM2026App",email:`wm${Date.now()}@app.local`,password:"WM2026!app"})
+      }, 5000);
+      if(!r.ok) throw new Error(`register ${r.status}`);
+      const rd = await r.json();
+      const t = rd.token||rd.access_token||(rd.data&&rd.data.token);
+      if(!t) throw new Error('no token');
+      try { localStorage.setItem('wm26_token', t); } catch(e){}
+      const r2 = await fetchWithTimeout(`${API}/get/games`, {
+        headers: {'Accept':'application/json','Authorization':`Bearer ${t}`}
+      }, 5000);
+      if(!r2.ok) throw new Error(`post-register ${r2.status}`);
+      return parseGames(await r2.json());
+    },
+    // 3) CORS proxy fallback: allorigins
+    async () => {
+      const r = await fetchWithTimeout(
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(API+'/get/games')}`, {}, 8000);
+      if(!r.ok) throw new Error(`allorigins ${r.status}`);
+      return parseGames(await r.json());
+    },
+    // 4) CORS proxy fallback: corsproxy.io
+    async () => {
+      const r = await fetchWithTimeout(
+        `https://corsproxy.io/?url=${encodeURIComponent(API+'/get/games')}`, {}, 8000);
+      if(!r.ok) throw new Error(`corsproxy ${r.status}`);
+      return parseGames(await r.json());
+    },
+  ];
+
+  for(const src of sources) {
+    try {
+      const games = await src();
+      if(games && games.length > 0) {
+        GAMES = mapGamesFromAPI(games);
+        lastUpdate = new Date();
+        const liveCount = GAMES.filter(g=>isLive(g.d,g.t)).length;
         setPill('live', liveCount>0?`● ${liveCount} LIVE`:'● aktuell');
         showApiBanner(true);
         render();
         if(curView===1) renderGroups();
         return;
       }
-    }
-  } catch(e){ console.warn('games fetch failed:',e.message); }
+    } catch(e) { console.warn('source failed:', e.message); }
+  }
 
-  // Fallback
   setPill('offline','📅 Spielplan');
   showApiBanner(false);
   render();
