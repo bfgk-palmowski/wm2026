@@ -463,16 +463,17 @@ setInterval(()=>{
 // ═══════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════
-// Timezone helper: MESZ (UTC+2) → Fort St. John BC (UTC-6 in summer / MDT)
-// Difference: FSJ is 8 hours BEHIND MESZ
+// Timezone helper: MESZ (UTC+2) → Fort St. John BC (PDT = UTC-7 in summer)
+// Difference: FSJ is 9 hours BEHIND MESZ
 function fsjTime(timeStr) {
   const [h, m] = timeStr.split(':').map(Number);
-  let fsjH = h - 8;
-  if(fsjH < 0) fsjH += 24;
-  const fsjM = m;
+  let fsjH = h - 9;
+  let dayOffset = 0;
+  if(fsjH < 0) { fsjH += 24; dayOffset = -1; }
   const period = fsjH >= 12 ? 'pm' : 'am';
   const h12 = fsjH === 0 ? 12 : fsjH > 12 ? fsjH - 12 : fsjH;
-  return `${h12}:${String(fsjM).padStart(2,'0')} ${period}`;
+  const suffix = dayOffset < 0 ? ' (Vortag)' : '';
+  return `${h12}:${String(m).padStart(2,'0')} ${period}${suffix}`;
 }
 
 const NOW=()=>new Date();
