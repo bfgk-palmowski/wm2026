@@ -825,15 +825,20 @@ async function triggerInstall() {
   if(deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if(outcome === 'accepted') document.getElementById('installHint').innerHTML = '';
+    // Hide banner regardless of outcome
+    document.getElementById('installHint').innerHTML = '';
     deferredPrompt = null;
   }
 }
 
 function showInstallBanner() {
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const standalone = window.navigator.standalone ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    document.referrer.includes('android-app://');
   if(standalone) return;
+  // Also hide if already dismissed this session
+  try { if(sessionStorage.getItem('installDismissed')) return; } catch(e){}
 
   const hint = document.getElementById('installHint');
   if(deferredPrompt) {
@@ -843,7 +848,7 @@ function showInstallBanner() {
         <div class="install-icon">📲</div>
         <p><strong>Als App installieren</strong>Einmal tippen – immer dabei</p>
         <button class="install-btn" onclick="triggerInstall()">Installieren</button>
-        <button class="install-close" onclick="this.closest('.install').remove()">✕</button>
+        <button class="install-close" onclick="try{sessionStorage.setItem('installDismissed','1')}catch(e){}; this.closest('.install').remove()">✕</button>
       </div>`;
   } else if(ios) {
     // iOS: manual instructions
