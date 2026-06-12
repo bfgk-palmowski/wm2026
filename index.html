@@ -316,125 +316,19 @@ const STATIC_GAMES=[
 // ═══════════════════════════════════════
 // LIVE API
 // ═══════════════════════════════════════
-const API = "https://worldcup26.ir";
+// Statische Daten – sofort verfügbar
 let GAMES = STATIC_GAMES.map(g => ({...g}));
-let apiStatus = 'loading';
-let lastUpdate = null;
-let apiToken = null;
-try { apiToken = localStorage.getItem('wm26_token'); } catch(e) {}
+let apiStatus = 'offline';
+let lastUpdate = new Date();
 
-async function fetchAPI(path, token) {
-  const headers = {'Content-Type':'application/json', 'Accept':'application/json'};
-  if(token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API}${path}`, {headers, signal: AbortSignal.timeout(8000)});
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-// API team_id → our 3-letter code (exact, from football.teams.json)
-const TEAM_ID = {
-  '1':'MEX','2':'RSA','3':'KOR','4':'CZE','5':'CAN','6':'BIH','7':'QAT','8':'SUI',
-  '9':'BRA','10':'MAR','11':'HAI','12':'SCO','13':'USA','14':'PAR','15':'AUS','16':'TUR',
-  '17':'GER','18':'CUR','19':'CIV','20':'ECU','21':'NED','22':'JPN','23':'SWE','24':'TUN',
-  '25':'BEL','26':'EGY','27':'IRN','28':'NZL','29':'ESP','30':'CPV','31':'SAU','32':'URU',
-  '33':'FRA','34':'SEN','35':'IRQ','36':'NOR','37':'ARG','38':'ALG','39':'AUT','40':'JOR',
-  '41':'POR','42':'COD','43':'UZB','44':'COL','45':'ENG','46':'CRO','47':'GHA','48':'PAN',
-};
-
-function mapGamesFromAPI(apiGames) {
-  const byId = {};
-  for(const ag of apiGames) {
-    const apiId = String(ag.id || '');
-    if(!apiId) continue;
-    const rawH = ag.home_score;
-    const rawA = ag.away_score;
-    const finished = String(ag.finished || '').toUpperCase() === 'TRUE';
-    const inPlay = ag.time_elapsed && ag.time_elapsed !== 'notstarted' && ag.time_elapsed !== 'fulltime' && !finished;
-    let sH = null, sA = null;
-    if(rawH !== null && rawH !== undefined && String(rawH) !== 'null' && (finished || inPlay)) {
-      sH = Number(rawH); sA = Number(rawA);
-      if(isNaN(sH) || isNaN(sA)) { sH = null; sA = null; }
-    }
-    const parseScorers = s => (!s || s === 'null' || s === '') ? null : s;
-    const timeElapsed = (ag.time_elapsed && ag.time_elapsed !== 'notstarted') ? ag.time_elapsed : null;
-    byId[apiId] = {sH, sA, finished, inPlay,
-      scorersH: parseScorers(ag.home_scorers),
-      scorersA: parseScorers(ag.away_scorers),
-      timeElapsed,
-      homeCode: TEAM_ID[String(ag.home_team_id)] || null,
-      awayCode: TEAM_ID[String(ag.away_team_id)] || null,
-    };
-  }
-  return STATIC_GAMES.map(sg => {
-    const api = byId[String(sg.id)];
-    if(!api) return {...sg};
-    return {...sg, sH: api.sH, sA: api.sA,
-      scorersH: api.scorersH, scorersA: api.scorersA,
-      timeElapsed: api.timeElapsed};
-  });
-}
-
-async function loadLiveData() {
-  setPill('loading', 'Lade…');
+function loadLiveData() {
   GAMES = STATIC_GAMES.map(g => ({...g}));
-  render();
-
-  const tryLoad = async (token) => {
-    const data = await fetchAPI('/get/games', token);
-    const games = Array.isArray(data) ? data : (data.data || data.matches || data.games || []);
-    return games;
-  };
-
-  try {
-    const games = await tryLoad(apiToken);
-    if(games.length > 0) {
-      GAMES = mapGamesFromAPI(games);
-      return finishLoad(true);
-    }
-  } catch(e) { console.warn('No-token failed:', e.message); }
-
-  if(!apiToken) {
-    try {
-      const r = await fetch(`${API}/auth/register`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({name:"WM2026App", email:`wm${Date.now()}@app.local`, password:"WM2026!app"}),
-        signal: AbortSignal.timeout(6000)
-      });
-      if(r.ok) {
-        const rd = await r.json();
-        apiToken = rd.token || rd.access_token || rd.data?.token;
-        if(apiToken) localStorage.setItem('wm26_token', apiToken);
-      }
-    } catch(e) { console.warn('Register failed:', e.message); }
-  }
-
-  if(apiToken) {
-    try {
-      const games = await tryLoad(apiToken);
-      if(games.length > 0) {
-        GAMES = mapGamesFromAPI(games);
-        return finishLoad(true);
-      }
-    } catch(e) { console.warn('Token fetch failed:', e.message); apiToken = null; }
-  }
-
-  apiStatus = 'offline';
-  setPill('offline', 'Offline · Spielplan aktuell');
+  setPill('offline', '📅 Spielplan aktuell');
   showApiBanner(false);
-  render();
-}
-
-function finishLoad(success) {
-  apiStatus = 'live';
-  lastUpdate = new Date();
-  const liveCount = GAMES.filter(g => isLive(g.d, g.t)).length;
-  setPill('live', liveCount > 0 ? `● ${liveCount} LIVE` : '● aktuell');
-  showApiBanner(true);
   render();
   if(curView === 1) renderGroups();
 }
 
-// Auto-refresh every 60 seconds during live games
 setInterval(()=>{
   if(GAMES.some(g=>isLive(g.d,g.t))) loadLiveData();
 }, 60000);
