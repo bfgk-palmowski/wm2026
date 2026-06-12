@@ -10,14 +10,14 @@
 <title>WM 2026 – Spielplan</title>
 <style>
 :root {
-  --bg:#1b3a5c; --surface:#1e4168; --card:#234872; --card2:#265080;
-  --accent:#2ee8c0; --accent2:#7ff0d8; --green:#22c55e; --red:#ff3333;
-  --text:#f0f8ff; --muted:#8ab8d0; --border:#2d5a8a; --r:11px;
+  --bg:#f0f4f8; --surface:#e2eaf4; --card:#ffffff; --card2:#dce6f0;
+  --accent:#0055a4; --accent2:#0077cc; --green:#16a34a; --red:#dc2626;
+  --text:#0f1f30; --muted:#5a7a9a; --border:#c8d8e8; --r:11px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:15px}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
-header{background:linear-gradient(180deg,#163358 0%,var(--surface) 100%);padding:14px 14px 10px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+header{background:linear-gradient(180deg,#d6e4f0 0%,var(--surface) 100%);padding:14px 14px 10px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{font-size:1.6rem;line-height:1}
@@ -31,7 +31,7 @@ header{background:linear-gradient(180deg,#163358 0%,var(--surface) 100%);padding
 .filter-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}
 .filter-row::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s;user-select:none}
-.chip.on{background:var(--accent);color:#0e1a2e;border-color:var(--accent)}
+.chip.on{background:var(--accent);color:#ffffff;border-color:var(--accent)}
 .search-wrap{position:relative}
 .search-wrap input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 12px 8px 34px;border-radius:8px;font-size:.85rem;outline:none;font-family:inherit}
 .search-wrap input:focus{border-color:var(--accent2)}
@@ -48,7 +48,7 @@ header{background:linear-gradient(180deg,#163358 0%,var(--surface) 100%);padding
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:7px;transition:border-color .12s,transform .08s;cursor:pointer}
 .card:active{transform:scale(0.985)}
 .card.is-live{border-color:var(--red)}
-.card.is-today{border-color:#3a7ab8}
+.card.is-today{border-color:#0055a4}
 .card.is-past{opacity:.62}
 .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .phase-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -68,8 +68,8 @@ header{background:linear-gradient(180deg,#163358 0%,var(--surface) 100%);padding
 .empty big{font-size:2rem;display:block;margin-bottom:8px}
 .groups-wrap{padding:10px}
 .g-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
-.g-title{background:var(--accent);color:#0e1a2e;font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;display:flex;align-items:center;justify-content:space-between}
-.g-teams{font-size:.7rem;color:#0e1a2e66;font-weight:600}
+.g-title{background:var(--accent);color:#ffffff;font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;display:flex;align-items:center;justify-content:space-between}
+.g-teams{font-size:.7rem;color:#ffffff77;font-weight:600}
 table{width:100%;border-collapse:collapse}
 th{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 7px;text-align:center;border-bottom:1px solid var(--border);font-weight:700}
 th:first-child{text-align:left;padding-left:13px;min-width:110px}
@@ -78,25 +78,47 @@ td:first-child{text-align:left;padding-left:13px}
 tr:last-child td{border-bottom:none}
 .t-cell{display:flex;align-items:center;gap:6px}
 .pts-cell{font-weight:800;color:var(--accent)}
-.adv td{background:#2a5a8a}
+.adv td{background:#dceeff}
 .ko-wrap{padding:10px}
 .ko-info{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;text-align:center}
 .ko-info .big{font-size:2.5rem;margin-bottom:8px}
 .ko-info h3{font-size:1rem;color:var(--accent);margin-bottom:6px}
 .ko-info p{font-size:.82rem;color:var(--muted);line-height:1.6}
-.round-badge{display:inline-block;background:#1e4168;border:1px solid var(--accent)66;color:var(--accent);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:5px;margin-bottom:8px}
+.round-badge{display:inline-block;background:#e8f0fb;border:1px solid var(--accent)66;color:var(--accent);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:5px;margin-bottom:8px}
 .ko-round-section{margin-bottom:14px}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border:none;background:none;color:var(--muted);font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;font-family:inherit;transition:color .12s}
 .nb.on{color:var(--accent)}
 .nb svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ranking-wrap{padding:10px}
+.rank-table{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.rank-header{background:var(--accent);color:#ffffff;font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:8px 13px;display:flex;align-items:center;justify-content:space-between}
+.rank-pos{width:24px;text-align:center;font-size:.75rem;color:var(--muted);font-weight:700}
+.rank-pos.top{color:var(--accent);font-weight:900}
+.rank-flag{font-size:1.1rem;margin:0 4px}
+.rank-name{flex:1;font-size:.85rem;font-weight:600}
+.rank-grp{font-size:.65rem;color:var(--muted);margin-right:6px}
+td.rank-pts{font-weight:800;color:var(--accent)}
+.favedit-wrap{padding:10px}
+.fav-header{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.fav-header h3{font-size:.9rem;color:var(--accent);font-weight:800;margin-bottom:4px}
+.fav-header p{font-size:.75rem;color:var(--muted);line-height:1.4}
+.fav-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.fav-team-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;transition:all .12s;user-select:none}
+.fav-team-btn.selected{border-color:var(--accent);background:var(--card2)}
+.fav-team-btn .fav-flag{font-size:1.2rem;line-height:1}
+.fav-team-btn .fav-name{font-size:.78rem;font-weight:600;color:var(--text);flex:1}
+.fav-team-btn .fav-star{font-size:.9rem;opacity:0;transition:opacity .12s}
+.fav-team-btn.selected .fav-star{opacity:1}
+.fav-done-btn{width:100%;background:var(--accent);color:#ffffff;border:none;padding:11px;border-radius:9px;font-size:.9rem;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.chip.fav-chip.on{background:linear-gradient(90deg,var(--accent),#1ab89a)}
 .install{background:var(--card2);border:1px solid var(--accent)55;border-radius:var(--r);padding:12px 14px;margin:10px 10px 0;display:flex;align-items:center;gap:10px}
 .install-icon{font-size:1.6rem;line-height:1;flex-shrink:0}
 .install p{font-size:.75rem;color:var(--muted);flex:1;line-height:1.4}
 .install strong{color:var(--accent);display:block;margin-bottom:1px}
-.install-btn{background:var(--accent);color:#0e1a2e;border:none;padding:7px 16px;border-radius:8px;font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;letter-spacing:.02em}
+.install-btn{background:var(--accent);color:#ffffff;border:none;padding:7px 16px;border-radius:8px;font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;letter-spacing:.02em}
 .install-close{background:transparent;color:var(--muted);border:1px solid var(--border);padding:5px 9px;border-radius:7px;font-size:.8rem;cursor:pointer;font-family:inherit;flex-shrink:0;margin-left:2px}
-.api-banner{background:#1e4168;border:1px solid var(--green)44;border-radius:var(--r);padding:9px 13px;margin:8px 10px 0;display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
+.api-banner{background:#e8f0fb;border:1px solid var(--green)44;border-radius:var(--r);padding:9px 13px;margin:8px 10px 0;display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
 .api-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 .api-dot.orange{background:orange}
 .api-dot.grey{background:#555}
@@ -121,6 +143,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:
     <div class="chip on" onclick="setFilter('all')">Alle</div>
     <div class="chip" onclick="setFilter('live')">🔴 Live</div>
     <div class="chip" onclick="setFilter('today')">Heute</div>
+    <div class="chip fav-chip" onclick="setFilter('favoriten')">⭐ Favoriten</div>
     <div class="chip" onclick="setFilter('gruppe')">Gruppenphase</div>
     <div class="chip" onclick="setFilter('sechzehntelfinale')">Sechzehntelfinale</div>
     <div class="chip" onclick="setFilter('achtelfinale')">Achtelfinale</div>
@@ -138,6 +161,8 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:
 <div id="viewSchedule" class="view active"><div class="sched" id="schedCont"><div class="empty"><big>⏳</big>Daten werden geladen…</div></div></div>
 <div id="viewGroups" class="view"><div class="groups-wrap" id="groupsCont"></div></div>
 <div id="viewKO" class="view"><div class="ko-wrap" id="koCont"></div></div>
+<div id="viewRanking" class="view"><div class="ranking-wrap" id="rankingCont"></div></div>
+<div id="viewFavEdit" class="view"><div class="favedit-wrap" id="favEditCont"></div></div>
 <nav>
   <button class="nb on" id="nb0" onclick="switchView(0)">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Spielplan
@@ -147,6 +172,9 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:
   </button>
   <button class="nb" id="nb2" onclick="switchView(2)">
     <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>K.O.-Runde
+  </button>
+  <button class="nb" id="nb3" onclick="switchView(3)">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Rangliste
   </button>
 </nav>
 
@@ -484,21 +512,38 @@ function phLbl(ph,g){
 // STATE
 // ═══════════════════════════════════════
 let filter='all',curView=0;
+let pendingFilter=null;
+// Favorites – persisted in localStorage
+let favorites=new Set();
+try{const s=localStorage.getItem('wm26_favs');if(s)favorites=new Set(JSON.parse(s));}catch(e){}
+function saveFavs(){try{localStorage.setItem('wm26_favs',JSON.stringify([...favorites]));}catch(e){}}
 function setFilter(f){
+  if(f==='favoriten' && favorites.size===0){
+    // No favorites yet → open editor first
+    switchView(4);
+    pendingFilter='favoriten';
+    return;
+  }
   filter=f;
-  const fs=['all','live','today','gruppe','sechzehntelfinale','achtelfinale','viertelfinale','halbfinale','finale'];
+  const fs=['all','live','today','favoriten','gruppe','sechzehntelfinale','achtelfinale','viertelfinale','halbfinale','finale'];
   document.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('on',fs[i]===f));
+  switchView(0);
   render();
 }
 function switchView(v){
   curView=v;
-  ['viewSchedule','viewGroups','viewKO'].forEach((id,i)=>{
+  ['viewSchedule','viewGroups','viewKO','viewRanking','viewFavEdit'].forEach((id,i)=>{
     document.getElementById(id).classList.toggle('active',i===v);
-    document.getElementById('nb'+i).classList.toggle('on',i===v);
+  });
+  [0,1,2,3].forEach(i=>{
+    const nb=document.getElementById('nb'+i);
+    if(nb) nb.classList.toggle('on',i===v);
   });
   if(v===0)render();
   if(v===1)renderGroups();
   if(v===2)renderKO();
+  if(v===3)renderRanking();
+  if(v===4)renderFavEdit();
 }
 
 // ═══════════════════════════════════════
@@ -510,6 +555,7 @@ function render(){
   let list=GAMES.filter(g=>{
     if(filter==='live')return isLive(g.d,g.t);
     if(filter==='today')return isToday(g.d);
+    if(filter==='favoriten')return favorites.has(g.h)||favorites.has(g.a);
     if(filter!=='all')return g.ph===filter;
     return true;
   });
@@ -622,6 +668,145 @@ function renderKO(){
 // ═══════════════════════════════════════
 // INSTALL + INIT
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// RENDER RANKING (all 48 teams sorted)
+// ═══════════════════════════════════════
+function renderRanking() {
+  // Build standings across all groups
+  const allTeams = [];
+  Object.keys(GD).forEach(g => {
+    GD[g].teams.forEach(t => {
+      allTeams.push({code:t, group:g, sp:0,gw:0,u:0,v:0,tore:0,gegen:0,diff:0,pts:0});
+    });
+  });
+  const byCode = {};
+  allTeams.forEach(t => byCode[t.code] = t);
+
+  GAMES.filter(x=>x.ph==='gruppe'&&x.sH!==null).forEach(m=>{
+    const h=byCode[m.h], a=byCode[m.a];
+    if(!h||!a) return;
+    h.sp++;a.sp++;
+    h.tore+=m.sH;h.gegen+=m.sA;a.tore+=m.sA;a.gegen+=m.sH;
+    if(m.sH>m.sA){h.gw++;h.pts+=3;a.v++;}
+    else if(m.sH<m.sA){a.gw++;a.pts+=3;h.v++;}
+    else{h.u++;a.u++;h.pts++;a.pts++;}
+  });
+  allTeams.forEach(t=>t.diff=t.tore-t.gegen);
+
+  // Sort: pts desc, diff desc, tore desc, name
+  allTeams.sort((a,b)=>b.pts-a.pts||b.diff-a.diff||b.tore-a.tore||N(a.code).localeCompare(N(b.code)));
+
+  const isFav = t => favorites.has(t);
+
+  let html = `<div class="rank-table">
+    <div class="rank-header">
+      Gesamtrangliste · Gruppenphase
+      <span style="font-size:.65rem;opacity:.7">${allTeams.filter(t=>t.sp>0).length} Teams mit Spielen</span>
+    </div>
+    <table>
+      <tr>
+        <th style="width:28px">#</th>
+        <th style="text-align:left;padding-left:8px">Team</th>
+        <th>Gr.</th><th>Sp</th><th>T</th><th>Diff</th><th>Pkt</th>
+      </tr>`;
+
+  allTeams.forEach((t,i) => {
+    const fav = isFav(t.code);
+    const top = i < 24; // top 24 advance (approx)
+    html += `<tr style="${fav?'background:#1f4a6a;':''}" onclick="toggleFav('${t.code}')">
+      <td><span class="rank-pos ${top?'top':''}">${i+1}</span></td>
+      <td style="text-align:left;padding-left:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:1.1rem">${F(t.code)}</span>
+          <span style="font-size:.82rem;font-weight:${fav?'800':'600'};color:${fav?'var(--accent)':'var(--text)'}">${N(t.code)}</span>
+          ${fav?'<span style="font-size:.7rem">⭐</span>':''}
+        </div>
+      </td>
+      <td style="font-size:.7rem;color:var(--muted)">${t.group}</td>
+      <td>${t.sp}</td>
+      <td>${t.tore}:${t.gegen}</td>
+      <td>${t.diff>=0?'+'+t.diff:t.diff}</td>
+      <td class="rank-pts">${t.pts}</td>
+    </tr>`;
+  });
+
+  html += `</table></div>
+    <p style="font-size:.68rem;color:var(--muted);padding:0 4px 12px;text-align:center">
+      Tippe auf ein Team um es als Favorit zu markieren ⭐
+    </p>`;
+
+  document.getElementById('rankingCont').innerHTML = html;
+}
+
+function toggleFav(code) {
+  if(favorites.has(code)) favorites.delete(code);
+  else favorites.add(code);
+  saveFavs();
+  renderRanking();
+  // Update fav chip label
+  updateFavChip();
+}
+
+function updateFavChip() {
+  const chip = document.querySelector('.fav-chip');
+  if(!chip) return;
+  chip.textContent = favorites.size > 0 ? `⭐ Favoriten (${favorites.size})` : '⭐ Favoriten';
+}
+
+// ═══════════════════════════════════════
+// RENDER FAV EDITOR
+// ═══════════════════════════════════════
+function renderFavEdit() {
+  // Group teams by group for nice display
+  let html = `<div class="fav-header">
+    <h3>⭐ Favoriten auswählen</h3>
+    <p>Tippe auf Teams die du verfolgen möchtest. Die Auswahl wird gespeichert.</p>
+  </div>`;
+
+  Object.keys(GD).forEach(g => {
+    html += `<div style="font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 2px 5px">Gruppe ${g}</div>
+    <div class="fav-grid">`;
+    GD[g].teams.forEach(t => {
+      const sel = favorites.has(t);
+      html += `<div class="fav-team-btn ${sel?'selected':''}" onclick="toggleFavEdit('${t}')">
+        <span class="fav-flag">${F(t)}</span>
+        <span class="fav-name">${N(t)}</span>
+        <span class="fav-star">⭐</span>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  html += `<button class="fav-done-btn" onclick="favEditDone()">
+    ✓ Fertig${favorites.size>0?' ('+favorites.size+' ausgewählt)':''}
+  </button>`;
+
+  document.getElementById('favEditCont').innerHTML = html;
+}
+
+function toggleFavEdit(code) {
+  if(favorites.has(code)) favorites.delete(code);
+  else favorites.add(code);
+  saveFavs();
+  updateFavChip();
+  renderFavEdit();
+}
+
+function favEditDone() {
+  if(pendingFilter==='favoriten' && favorites.size>0) {
+    pendingFilter=null;
+    setFilter('favoriten');
+  } else {
+    switchView(0);
+  }
+}
+
+// Pre-select default favorites: Germany, Canada, Norway
+if(favorites.size===0){
+  ['GER','CAN','NOR'].forEach(c=>favorites.add(c));
+  saveFavs();
+}
+
 // ── PWA Install ─────────────────────────────────────
 let deferredPrompt = null;
 
