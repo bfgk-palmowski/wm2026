@@ -10,14 +10,14 @@
 <title>WM 2026 – Spielplan</title>
 <style>
 :root {
-  --bg:#0e1a2e; --surface:#152338; --card:#1a2d46; --card2:#1f3452;
+  --bg:#1b3a5c; --surface:#1e4168; --card:#234872; --card2:#265080;
   --accent:#2ee8c0; --accent2:#7ff0d8; --green:#22c55e; --red:#ff3333;
-  --text:#e8f4f2; --muted:#6b9aaa; --border:#1e3a52; --r:11px;
+  --text:#f0f8ff; --muted:#8ab8d0; --border:#2d5a8a; --r:11px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:15px}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
-header{background:linear-gradient(180deg,#0a1520 0%,var(--surface) 100%);padding:14px 14px 10px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+header{background:linear-gradient(180deg,#163358 0%,var(--surface) 100%);padding:14px 14px 10px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{font-size:1.6rem;line-height:1}
@@ -48,7 +48,7 @@ header{background:linear-gradient(180deg,#0a1520 0%,var(--surface) 100%);padding
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:7px;transition:border-color .12s,transform .08s;cursor:pointer}
 .card:active{transform:scale(0.985)}
 .card.is-live{border-color:var(--red)}
-.card.is-today{border-color:#1e4a6a}
+.card.is-today{border-color:#3a7ab8}
 .card.is-past{opacity:.62}
 .card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .phase-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -78,13 +78,13 @@ td:first-child{text-align:left;padding-left:13px}
 tr:last-child td{border-bottom:none}
 .t-cell{display:flex;align-items:center;gap:6px}
 .pts-cell{font-weight:800;color:var(--accent)}
-.adv td{background:#1a3a50}
+.adv td{background:#2a5a8a}
 .ko-wrap{padding:10px}
 .ko-info{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;text-align:center}
 .ko-info .big{font-size:2.5rem;margin-bottom:8px}
 .ko-info h3{font-size:1rem;color:var(--accent);margin-bottom:6px}
 .ko-info p{font-size:.82rem;color:var(--muted);line-height:1.6}
-.round-badge{display:inline-block;background:#152338;border:1px solid var(--accent)66;color:var(--accent);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:5px;margin-bottom:8px}
+.round-badge{display:inline-block;background:#1e4168;border:1px solid var(--accent)66;color:var(--accent);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:5px;margin-bottom:8px}
 .ko-round-section{margin-bottom:14px}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;border:none;background:none;color:var(--muted);font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;font-family:inherit;transition:color .12s}
@@ -96,7 +96,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:
 .install strong{color:var(--accent);display:block;margin-bottom:1px}
 .install-btn{background:var(--accent);color:#0e1a2e;border:none;padding:7px 16px;border-radius:8px;font-size:.8rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;letter-spacing:.02em}
 .install-close{background:transparent;color:var(--muted);border:1px solid var(--border);padding:5px 9px;border-radius:7px;font-size:.8rem;cursor:pointer;font-family:inherit;flex-shrink:0;margin-left:2px}
-.api-banner{background:#152338;border:1px solid var(--green)44;border-radius:var(--r);padding:9px 13px;margin:8px 10px 0;display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
+.api-banner{background:#1e4168;border:1px solid var(--green)44;border-radius:var(--r);padding:9px 13px;margin:8px 10px 0;display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
 .api-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 .api-dot.orange{background:orange}
 .api-dot.grey{background:#555}
