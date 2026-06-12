@@ -388,9 +388,21 @@ function mapFDMatch(match) {
 }
 
 async function loadLiveData() {
-  setPill('loading', 'Lade Live-Daten…');
+  setPill('loading', 'Lade…');
+  // Show static data immediately so app is usable right away
+  GAMES = STATIC_GAMES.map(g => ({...g}));
+  render();
+
   try {
-    const data = await fetchAPI(`/competitions/${WC_ID}/matches`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`${API}/competitions/${WC_ID}/matches`, {
+      headers: { 'X-Auth-Token': API_KEY },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
     const matches = data.matches || [];
     if(matches.length > 0) {
       const result = STATIC_GAMES.map(sg => ({...sg}));
@@ -405,12 +417,12 @@ async function loadLiveData() {
     }
   } catch(e) {
     console.warn('football-data.org failed:', e.message);
-    GAMES = STATIC_GAMES.map(g => ({...g}));
-    apiStatus = 'offline';
-    setPill('offline', 'Offline-Daten');
-    showApiBanner(false);
-    render();
   }
+  // Stay with static data
+  apiStatus = 'offline';
+  setPill('offline', 'Offline · Spielplan aktuell');
+  showApiBanner(false);
+  render();
 }
 
 function finishLoad(success) {
