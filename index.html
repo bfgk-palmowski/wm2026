@@ -316,17 +316,107 @@ const STATIC_GAMES=[
 // ═══════════════════════════════════════
 // LIVE API
 // ═══════════════════════════════════════
-// Statische Daten – sofort verfügbar
+const API = "https://worldcup26.ir";
 let GAMES = STATIC_GAMES.map(g => ({...g}));
 let apiStatus = 'offline';
-let lastUpdate = new Date();
+let lastUpdate = null;
 
-function loadLiveData() {
-  GAMES = STATIC_GAMES.map(g => ({...g}));
-  setPill('offline', '📅 Spielplan aktuell');
+// API team_id → our 3-letter code
+const TEAM_ID = {
+  '1':'MEX','2':'RSA','3':'KOR','4':'CZE','5':'CAN','6':'BIH','7':'QAT','8':'SUI',
+  '9':'BRA','10':'MAR','11':'HAI','12':'SCO','13':'USA','14':'PAR','15':'AUS','16':'TUR',
+  '17':'GER','18':'CUR','19':'CIV','20':'ECU','21':'NED','22':'JPN','23':'SWE','24':'TUN',
+  '25':'BEL','26':'EGY','27':'IRN','28':'NZL','29':'ESP','30':'CPV','31':'SAU','32':'URU',
+  '33':'FRA','34':'SEN','35':'IRQ','36':'NOR','37':'ARG','38':'ALG','39':'AUT','40':'JOR',
+  '41':'POR','42':'COD','43':'UZB','44':'COL','45':'ENG','46':'CRO','47':'GHA','48':'PAN',
+};
+
+function mapGamesFromAPI(apiGames) {
+  const byId = {};
+  for(const ag of apiGames) {
+    const apiId = String(ag.id || '');
+    if(!apiId) continue;
+    const finished = String(ag.finished||'').toUpperCase()==='TRUE';
+    const inPlay = ag.time_elapsed && ag.time_elapsed!=='notstarted' && ag.time_elapsed!=='fulltime' && !finished;
+    let sH=null, sA=null;
+    if((finished||inPlay) && ag.home_score!=null && String(ag.home_score)!=='null') {
+      sH=Number(ag.home_score); sA=Number(ag.away_score);
+      if(isNaN(sH)||isNaN(sA)){sH=null;sA=null;}
+    }
+    const ps = s=>(!s||s==='null'||s==='')?null:s;
+    byId[apiId]={sH,sA,
+      scorersH:ps(ag.home_scorers), scorersA:ps(ag.away_scorers),
+      timeElapsed:(ag.time_elapsed&&ag.time_elapsed!=='notstarted')?ag.time_elapsed:null,
+    };
+  }
+  return STATIC_GAMES.map(sg=>{
+    const api=byId[String(sg.id)];
+    if(!api) return {...sg};
+    return {...sg,...api};
+  });
+}
+
+async function fetchWithTimeout(url, opts, ms=5000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, {...opts, signal:ctrl.signal});
+    clearTimeout(tid);
+    return r;
+  } catch(e) { clearTimeout(tid); throw e; }
+}
+
+async function loadLiveData() {
+  // Show static data immediately – no waiting
+  GAMES = STATIC_GAMES.map(g=>({...g}));
+  setPill('loading','Lade…');
+  render();
+
+  // Try to get token from storage
+  let token = null;
+  try { token = localStorage.getItem('wm26_token'); } catch(e){}
+
+  // If no token, register quickly
+  if(!token) {
+    try {
+      const r = await fetchWithTimeout(`${API}/auth/register`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:"WM2026App",email:`wm${Date.now()}@app.local`,password:"WM2026!app"})
+      }, 5000);
+      if(r.ok){
+        const d=await r.json();
+        token=d.token||d.access_token||d.data?.token;
+        if(token) try{localStorage.setItem('wm26_token',token);}catch(e){}
+      }
+    } catch(e){ console.warn('register failed:',e.message); }
+  }
+
+  // Fetch games
+  try {
+    const headers={'Content-Type':'application/json','Accept':'application/json'};
+    if(token) headers['Authorization']=`Bearer ${token}`;
+    const r = await fetchWithTimeout(`${API}/get/games`, {headers}, 5000);
+    if(r.ok){
+      const data=await r.json();
+      const games=Array.isArray(data)?data:(data.data||data.matches||data.games||[]);
+      if(games.length>0){
+        GAMES=mapGamesFromAPI(games);
+        lastUpdate=new Date();
+        const liveCount=GAMES.filter(g=>isLive(g.d,g.t)).length;
+        setPill('live', liveCount>0?`● ${liveCount} LIVE`:'● aktuell');
+        showApiBanner(true);
+        render();
+        if(curView===1) renderGroups();
+        return;
+      }
+    }
+  } catch(e){ console.warn('games fetch failed:',e.message); }
+
+  // Fallback
+  setPill('offline','📅 Spielplan');
   showApiBanner(false);
   render();
-  if(curView === 1) renderGroups();
 }
 
 setInterval(()=>{
