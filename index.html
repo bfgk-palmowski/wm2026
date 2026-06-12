@@ -316,109 +316,108 @@ const STATIC_GAMES=[
 // ═══════════════════════════════════════
 // LIVE API
 // ═══════════════════════════════════════
-const API = "https://api.football-data.org/v4";
-const API_KEY = "8112913384da4a6a8ac819e094274787";
-const WC_ID = 2000; // FIFA World Cup competition ID
+const API = "https://worldcup26.ir";
 let GAMES = STATIC_GAMES.map(g => ({...g}));
 let apiStatus = 'loading';
 let lastUpdate = null;
+let apiToken = null;
+try { apiToken = localStorage.getItem('wm26_token'); } catch(e) {}
 
-async function fetchAPI(path) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { 'X-Auth-Token': API_KEY },
-    signal: AbortSignal.timeout(10000)
-  });
+async function fetchAPI(path, token) {
+  const headers = {'Content-Type':'application/json', 'Accept':'application/json'};
+  if(token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API}${path}`, {headers, signal: AbortSignal.timeout(8000)});
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// Map football-data.org match to our format
-function mapFDMatch(match) {
-  const homeName = (match.homeTeam?.name || '').toLowerCase();
-  const awayName = (match.awayTeam?.name || '').toLowerCase();
+// API team_id → our 3-letter code (exact, from football.teams.json)
+const TEAM_ID = {
+  '1':'MEX','2':'RSA','3':'KOR','4':'CZE','5':'CAN','6':'BIH','7':'QAT','8':'SUI',
+  '9':'BRA','10':'MAR','11':'HAI','12':'SCO','13':'USA','14':'PAR','15':'AUS','16':'TUR',
+  '17':'GER','18':'CUR','19':'CIV','20':'ECU','21':'NED','22':'JPN','23':'SWE','24':'TUN',
+  '25':'BEL','26':'EGY','27':'IRN','28':'NZL','29':'ESP','30':'CPV','31':'SAU','32':'URU',
+  '33':'FRA','34':'SEN','35':'IRQ','36':'NOR','37':'ARG','38':'ALG','39':'AUT','40':'JOR',
+  '41':'POR','42':'COD','43':'UZB','44':'COL','45':'ENG','46':'CRO','47':'GHA','48':'PAN',
+};
 
-  const aliases = {
-    MEX:'mexico', RSA:'south africa', KOR:'korea', CZE:'czech',
-    CAN:'canada', BIH:'bosnia', QAT:'qatar', SUI:'switzerland',
-    BRA:'brazil', MAR:'morocco', HAI:'haiti', SCO:'scotland',
-    USA:'united states', PAR:'paraguay', AUS:'australia', TUR:'turkey',
-    GER:'germany', CUR:'cura', CIV:'ivory', ECU:'ecuador',
-    NED:'netherlands', JPN:'japan', SWE:'sweden', TUN:'tunisia',
-    BEL:'belgium', EGY:'egypt', IRN:'iran', NZL:'new zealand',
-    ESP:'spain', CPV:'cape verde', SAU:'saudi', URU:'uruguay',
-    FRA:'france', SEN:'senegal', IRQ:'iraq', NOR:'norway',
-    ARG:'argentina', ALG:'algeria', AUT:'austria', JOR:'jordan',
-    POR:'portugal', COD:'congo', UZB:'uzbekistan', COL:'colombia',
-    ENG:'england', CRO:'croatia', GHA:'ghana', PAN:'panama',
-  };
-
-  const sg = STATIC_GAMES.find(s => {
-    const ha = aliases[s.h] || N(s.h).toLowerCase();
-    const aa = aliases[s.a] || N(s.a).toLowerCase();
-    const hMatch = homeName.includes(ha.substring(0,5)) || ha.includes(homeName.substring(0,5));
-    const aMatch = awayName.includes(aa.substring(0,5)) || aa.includes(awayName.substring(0,5));
-    return hMatch && aMatch;
-  });
-  if(!sg) return null;
-
-  const score = match.score;
-  const ft = score?.fullTime;
-  const sH = (ft?.home !== null && ft?.home !== undefined) ? ft.home : null;
-  const sA = (ft?.away !== null && ft?.away !== undefined) ? ft.away : null;
-  const status = match.status || '';
-  const inPlay = status === 'IN_PLAY' || status === 'PAUSED';
-  const finished = status === 'FINISHED';
-  const minute = match.minute || null;
-
-  let scorersH = null, scorersA = null;
-  if(match.goals && match.goals.length > 0) {
-    const hGoals = match.goals.filter(g => g.team?.id === match.homeTeam?.id);
-    const aGoals = match.goals.filter(g => g.team?.id === match.awayTeam?.id);
-    if(hGoals.length) scorersH = hGoals.map(g => `${(g.scorer?.name||'?').split(' ').pop()} ${g.minute}'`).join(', ');
-    if(aGoals.length) scorersA = aGoals.map(g => `${(g.scorer?.name||'?').split(' ').pop()} ${g.minute}'`).join(', ');
+function mapGamesFromAPI(apiGames) {
+  const byId = {};
+  for(const ag of apiGames) {
+    const apiId = String(ag.id || '');
+    if(!apiId) continue;
+    const rawH = ag.home_score;
+    const rawA = ag.away_score;
+    const finished = String(ag.finished || '').toUpperCase() === 'TRUE';
+    const inPlay = ag.time_elapsed && ag.time_elapsed !== 'notstarted' && ag.time_elapsed !== 'fulltime' && !finished;
+    let sH = null, sA = null;
+    if(rawH !== null && rawH !== undefined && String(rawH) !== 'null' && (finished || inPlay)) {
+      sH = Number(rawH); sA = Number(rawA);
+      if(isNaN(sH) || isNaN(sA)) { sH = null; sA = null; }
+    }
+    const parseScorers = s => (!s || s === 'null' || s === '') ? null : s;
+    const timeElapsed = (ag.time_elapsed && ag.time_elapsed !== 'notstarted') ? ag.time_elapsed : null;
+    byId[apiId] = {sH, sA, finished, inPlay,
+      scorersH: parseScorers(ag.home_scorers),
+      scorersA: parseScorers(ag.away_scorers),
+      timeElapsed,
+      homeCode: TEAM_ID[String(ag.home_team_id)] || null,
+      awayCode: TEAM_ID[String(ag.away_team_id)] || null,
+    };
   }
-
-  return {
-    ...sg,
-    sH: (finished || inPlay) ? sH : null,
-    sA: (finished || inPlay) ? sA : null,
-    scorersH, scorersA,
-    timeElapsed: inPlay && minute ? String(minute) : (finished ? 'fulltime' : 'notstarted'),
-  };
+  return STATIC_GAMES.map(sg => {
+    const api = byId[String(sg.id)];
+    if(!api) return {...sg};
+    return {...sg, sH: api.sH, sA: api.sA,
+      scorersH: api.scorersH, scorersA: api.scorersA,
+      timeElapsed: api.timeElapsed};
+  });
 }
 
 async function loadLiveData() {
   setPill('loading', 'Lade…');
-  // Show static data immediately so app is usable right away
   GAMES = STATIC_GAMES.map(g => ({...g}));
   render();
 
+  const tryLoad = async (token) => {
+    const data = await fetchAPI('/get/games', token);
+    const games = Array.isArray(data) ? data : (data.data || data.matches || data.games || []);
+    return games;
+  };
+
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`${API}/competitions/${WC_ID}/matches`, {
-      headers: { 'X-Auth-Token': API_KEY },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const matches = data.matches || [];
-    if(matches.length > 0) {
-      const result = STATIC_GAMES.map(sg => ({...sg}));
-      matches.forEach(m => {
-        const mapped = mapFDMatch(m);
-        if(!mapped) return;
-        const idx = result.findIndex(r => r.id === mapped.id);
-        if(idx >= 0) result[idx] = mapped;
-      });
-      GAMES = result;
+    const games = await tryLoad(apiToken);
+    if(games.length > 0) {
+      GAMES = mapGamesFromAPI(games);
       return finishLoad(true);
     }
-  } catch(e) {
-    console.warn('football-data.org failed:', e.message);
+  } catch(e) { console.warn('No-token failed:', e.message); }
+
+  if(!apiToken) {
+    try {
+      const r = await fetch(`${API}/auth/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name:"WM2026App", email:`wm${Date.now()}@app.local`, password:"WM2026!app"}),
+        signal: AbortSignal.timeout(6000)
+      });
+      if(r.ok) {
+        const rd = await r.json();
+        apiToken = rd.token || rd.access_token || rd.data?.token;
+        if(apiToken) localStorage.setItem('wm26_token', apiToken);
+      }
+    } catch(e) { console.warn('Register failed:', e.message); }
   }
-  // Stay with static data
+
+  if(apiToken) {
+    try {
+      const games = await tryLoad(apiToken);
+      if(games.length > 0) {
+        GAMES = mapGamesFromAPI(games);
+        return finishLoad(true);
+      }
+    } catch(e) { console.warn('Token fetch failed:', e.message); apiToken = null; }
+  }
+
   apiStatus = 'offline';
   setPill('offline', 'Offline · Spielplan aktuell');
   showApiBanner(false);
