@@ -442,7 +442,14 @@ async function loadLiveData() {
       const headers = {'Accept':'application/json'};
       if(token) headers['Authorization'] = `Bearer ${token}`;
       const r = await fetchWithTimeout(`${API}/get/games`, {headers}, 5000);
-      if(!r.ok) throw new Error(`direct ${r.status}`);
+      if(!r.ok) {
+        // Token likely expired – clear it so source 2 gets a fresh one
+        if(r.status === 401 || r.status === 403) {
+          token = null;
+          try { localStorage.removeItem('wm26_token'); } catch(e) {}
+        }
+        throw new Error(`direct ${r.status}`);
+      }
       return parseGames(await r.json());
     },
     // 2) Fresh registration, then direct
