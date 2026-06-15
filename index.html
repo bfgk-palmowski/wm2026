@@ -234,7 +234,7 @@ const STATIC_GAMES=[
   {id:24,d:"2026-06-26",t:"04:00",h:"PAR",a:"AUS",ph:"gruppe",g:"D",v:"San Francisco",sH:null,sA:null},
   {id:25,d:"2026-06-14",t:"19:00",h:"GER",a:"CUR",ph:"gruppe",g:"E",v:"Houston",sH:null,sA:null},
   {id:26,d:"2026-06-15",t:"01:00",h:"CIV",a:"ECU",ph:"gruppe",g:"E",v:"Philadelphia",sH:null,sA:null},
-  {id:27,d:"2026-06-15",t:"22:00",h:"GER",a:"CIV",ph:"gruppe",g:"E",v:"Toronto",sH:null,sA:null},
+  {id:27,d:"2026-06-20",t:"22:00",h:"GER",a:"CIV",ph:"gruppe",g:"E",v:"Toronto",sH:null,sA:null},
   {id:28,d:"2026-06-21",t:"02:00",h:"ECU",a:"CUR",ph:"gruppe",g:"E",v:"Kansas City",sH:null,sA:null},
   {id:29,d:"2026-06-25",t:"22:00",h:"CUR",a:"CIV",ph:"gruppe",g:"E",v:"Philadelphia",sH:null,sA:null},
   {id:30,d:"2026-06-25",t:"22:00",h:"ECU",a:"GER",ph:"gruppe",g:"E",v:"NY/New Jersey",sH:null,sA:null},
@@ -334,17 +334,66 @@ const TEAM_ID = {
 };
 
 function mapGamesFromAPI(apiGames) {
-  // The API creates MULTIPLE entries per fixture (live updates appended as new rows).
-  // So we match by TEAM PAIR, preferring: finished > inPlay > has score > newest.
-  const byPair = {};
+  // English name → our 3-letter code
+  const N2C = {
+    'Mexico':'MEX','South Africa':'RSA','South Korea':'KOR','Korea Republic':'KOR',
+    'Czech Republic':'CZE','Czechia':'CZE','Canada':'CAN',
+    'Bosnia and Herzegovina':'BIH','Bosnia & Herzegovina':'BIH',
+    'Qatar':'QAT','Switzerland':'SUI','Brazil':'BRA','Morocco':'MAR',
+    'Haiti':'HAI','Scotland':'SCO','United States':'USA','USA':'USA',
+    'Paraguay':'PAR','Australia':'AUS','Turkey':'TUR','Türkiye':'TUR',
+    'Germany':'GER','Curaçao':'CUR','Curacao':'CUR',
+    "Ivory Coast":'CIV',"Côte d'Ivoire":'CIV','Ecuador':'ECU',
+    'Netherlands':'NED','Japan':'JPN','Sweden':'SWE','Tunisia':'TUN',
+    'Belgium':'BEL','Egypt':'EGY','Iran':'IRN','IR Iran':'IRN',
+    'New Zealand':'NZL','Spain':'ESP','Cape Verde':'CPV',
+    'Saudi Arabia':'SAU','Uruguay':'URU','France':'FRA','Senegal':'SEN',
+    'Iraq':'IRQ','Norway':'NOR','Argentina':'ARG','Algeria':'ALG',
+    'Austria':'AUT','Jordan':'JOR','Portugal':'POR',
+    'Democratic Republic of the Congo':'COD','DR Congo':'COD',
+    'Uzbekistan':'UZB','Colombia':'COL','England':'ENG',
+    'Croatia':'CRO','Ghana':'GHA','Panama':'PAN',
+  };
 
+  // Phase mapping
+  const PH = (type, group) => {
+    if(!type) return 'gruppe';
+    const t = type.toLowerCase();
+    if(t==='group') return 'gruppe';
+    if(t.includes('32') || t.includes('sechzehntel')) return 'sechzehntelfinale';
+    if(t.includes('16') || t.includes('achtel') || t==='round of 16') return 'achtelfinale';
+    if(t.includes('quarter')) return 'viertelfinale';
+    if(t.includes('semi')) return 'halbfinale';
+    if(t.includes('final')) return 'finale';
+    if(t==='sf') return 'sechzehntelfinale';
+    return 'gruppe';
+  };
+
+  // Deduplicate by team pair, prefer finished > inPlay > has score
+  const byPair = {};
   const rank = e => e.finished ? 3 : e.inPlay ? 2 : (e.sH !== null ? 1 : 0);
 
   for(const ag of apiGames) {
-    const hId = String(ag.home_team_id || '');
-    const aId = String(ag.away_team_id || '');
-    if(!hId || !aId) continue;
-    const key = `${hId}|${aId}`;
+    const hName = ag.home_team_name_en || ag.home_team_label || '';
+    const aName = ag.away_team_name_en || ag.away_team_label || '';
+    const hCode = N2C[hName] || null;
+    const aCode = N2C[aName] || null;
+
+    // Parse date from local_date "MM/DD/YYYY HH:MM" → "YYYY-MM-DD" + time MESZ
+    let d = '', t = '';
+    if(ag.local_date) {
+      const parts = ag.local_date.split(' ');
+      if(parts[0]) {
+        const [mo,da,yr] = parts[0].split('/');
+        d = `${yr}-${mo.padStart(2,'0')}-${da.padStart(2,'0')}`;
+      }
+      if(parts[1]) {
+        // Convert local time to MESZ (UTC+2): stadium times are local US/MEX times
+        // We store as-is and note: times in static data are MESZ, API gives local
+        // For now keep local_date time as reference, will be overridden by static if matched
+        t = parts[1];
+      }
+    }
 
     const finished = String(ag.finished||'').toUpperCase() === 'TRUE';
     const inPlay = ag.time_elapsed && ag.time_elapsed !== 'notstarted' && ag.time_elapsed !== 'fulltime' && !finished;
@@ -357,47 +406,40 @@ function mapGamesFromAPI(apiGames) {
       }
     }
     const ps = s => (!s || s === 'null' || s === '') ? null : s;
+
     const entry = {
+      hCode, aCode, hName, aName, d, t,
+      group: ag.group || '-',
+      type: ag.type || 'group',
+      matchday: ag.matchday || '',
       sH, sA, finished, inPlay,
       scorersH: ps(ag.home_scorers),
       scorersA: ps(ag.away_scorers),
       timeElapsed: (ag.time_elapsed && ag.time_elapsed !== 'notstarted') ? ag.time_elapsed : null,
     };
 
+    // Key: use codes if available, else names
+    const key = hCode && aCode ? `${hCode}|${aCode}` : `${hName}|${aName}`;
     const prev = byPair[key];
-    if(!prev || rank(entry) > rank(prev)) {
-      byPair[key] = entry;
-    } else if(rank(entry) === rank(prev) && entry.sH !== null) {
-      // Same rank: prefer the later one (live updates come later in list)
+    if(!prev || rank(entry) > rank(prev) || (rank(entry) === rank(prev) && entry.sH !== null)) {
       byPair[key] = entry;
     }
   }
 
-  // Reverse lookup: our code → API team id
-  const CODE_TO_ID = {};
-  Object.keys(TEAM_ID).forEach(id => { CODE_TO_ID[TEAM_ID[id]] = id; });
-
-  return STATIC_GAMES.map(sg => {
-    const hId = CODE_TO_ID[sg.h];
-    const aId = CODE_TO_ID[sg.a];
-    if(!hId || !aId) return {...sg};
-    // Try both orientations (API might have home/away flipped)
-    let api = byPair[`${hId}|${aId}`];
-    let flipped = false;
-    if(!api) {
-      api = byPair[`${aId}|${hId}`];
-      flipped = true;
-    }
+  // Now merge with static games (static has correct MESZ times + our IDs)
+  const result = STATIC_GAMES.map(sg => {
+    const key = `${sg.h}|${sg.a}`;
+    const api = byPair[key];
     if(!api) return {...sg};
-    if(flipped) {
-      return {...sg, sH: api.sA, sA: api.sH,
-        scorersH: api.scorersA, scorersA: api.scorersH,
-        timeElapsed: api.timeElapsed};
-    }
-    return {...sg, sH: api.sH, sA: api.sA,
+    // Use API scores/scorers, keep static date/time/venue (they have correct MESZ)
+    return {...sg,
+      sH: api.sH, sA: api.sA,
       scorersH: api.scorersH, scorersA: api.scorersA,
-      timeElapsed: api.timeElapsed};
+      timeElapsed: api.timeElapsed,
+    };
   });
+
+  return result;
 }
 
 function setPill(type, txt) {
