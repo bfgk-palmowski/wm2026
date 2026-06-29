@@ -332,6 +332,18 @@ const TEAM_ID = {
   '41':'POR','42':'COD','43':'UZB','44':'COL','45':'ENG','46':'CRO','47':'GHA','48':'PAN',
 };
 
+// Translate API English KO labels to German
+function deLabel(s) {
+  if(!s) return s;
+  return s
+    .replace(/Winner Group ([A-L])/g, '1. Gruppe $1')
+    .replace(/Runner-up Group ([A-L])/g, '2. Gruppe $1')
+    .replace(/Winner Match (\d+)/g, 'Sieger Sp. $1')
+    .replace(/Loser Match (\d+)/g, 'Verlierer Sp. $1')
+    .replace(/3rd Group (.+)/g, '3. $1')
+    .replace(/3rd Place/g, 'Platz 3');
+}
+
 function mapGamesFromAPI(apiGames) {
   // English name → our 3-letter code
   const N2C = {
@@ -457,8 +469,8 @@ function mapGamesFromAPI(apiGames) {
       const hLabel = apiById.home_team_label || sg.h;
       const aLabel = apiById.away_team_label || sg.a;
       return {...sg,
-        h: N2C[hLabel] || hLabel,
-        a: N2C[aLabel] || aLabel,
+        h: N2C[hLabel] || deLabel(hLabel),
+        a: N2C[aLabel] || deLabel(aLabel),
         sH: sH2, sA: sA2,
         scorersH: ps2(apiById.home_scorers),
         scorersA: ps2(apiById.away_scorers),
