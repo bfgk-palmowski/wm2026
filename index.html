@@ -425,17 +425,47 @@ function mapGamesFromAPI(apiGames) {
     }
   }
 
-  // Now merge with static games (static has correct MESZ times + our IDs)
+  // Also build ID-based lookup for KO games (home_team_id=0, matched by API numeric id)
+  const byApiId = {};
+  for(const ag of apiGames) {
+    const numId = parseInt(ag.id);
+    if(!isNaN(numId)) byApiId[numId] = ag;
+  }
+
+  // Merge with static games
   const result = STATIC_GAMES.map(sg => {
+    // First try team-pair match (group games)
     const key = `${sg.h}|${sg.a}`;
     const api = byPair[key];
-    if(!api) return {...sg};
-    // Use API scores/scorers, keep static date/time/venue (they have correct MESZ)
-    return {...sg,
-      sH: api.sH, sA: api.sA,
-      scorersH: api.scorersH, scorersA: api.scorersA,
-      timeElapsed: api.timeElapsed,
-    };
+    if(api) {
+      return {...sg, sH: api.sH, sA: api.sA,
+        scorersH: api.scorersH, scorersA: api.scorersA,
+        timeElapsed: api.timeElapsed};
+    }
+    // Fallback: match by numeric API id (KO games)
+    const apiById = byApiId[sg.id];
+    if(apiById) {
+      const finished2 = String(apiById.finished||'').toUpperCase()==='TRUE';
+      const inPlay2 = apiById.time_elapsed && apiById.time_elapsed!=='notstarted' && apiById.time_elapsed!=='fulltime' && !finished2;
+      let sH2=null, sA2=null;
+      if((finished2||inPlay2) && apiById.home_score!=null && String(apiById.home_score)!=='null') {
+        sH2=Number(apiById.home_score); sA2=Number(apiById.away_score);
+        if(isNaN(sH2)||isNaN(sA2)){sH2=null;sA2=null;}
+      }
+      const ps2 = s=>(!s||s==='null'||s==='')?null:s;
+      // Update team labels for KO games if API has them
+      const hLabel = apiById.home_team_label || sg.h;
+      const aLabel = apiById.away_team_label || sg.a;
+      return {...sg,
+        h: N2C[hLabel] || hLabel,
+        a: N2C[aLabel] || aLabel,
+        sH: sH2, sA: sA2,
+        scorersH: ps2(apiById.home_scorers),
+        scorersA: ps2(apiById.away_scorers),
+        timeElapsed: (apiById.time_elapsed && apiById.time_elapsed!=='notstarted') ? apiById.time_elapsed : null,
+      };
+    }
+    return {...sg};
   });
 
   return result;
