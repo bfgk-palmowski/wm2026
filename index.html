@@ -465,12 +465,20 @@ function mapGamesFromAPI(apiGames) {
         if(isNaN(sH2)||isNaN(sA2)){sH2=null;sA2=null;}
       }
       const ps2 = s=>(!s||s==='null'||s==='')?null:s;
-      // Update team labels for KO games if API has them
+      // For KO games: prefer real team name over label
+      // API sets home_team_name_en when real teams are known
+      const hName2 = apiById.home_team_name_en || '';
+      const aName2 = apiById.away_team_name_en || '';
+      const hCode2 = N2C[hName2] || null;
+      const aCode2 = N2C[aName2] || null;
+      // Fall back to label if no real team yet
       const hLabel = apiById.home_team_label || sg.h;
       const aLabel = apiById.away_team_label || sg.a;
+      const hFinal = hCode2 || N2C[hLabel] || deLabel(hLabel);
+      const aFinal = aCode2 || N2C[aLabel] || deLabel(aLabel);
       return {...sg,
-        h: N2C[hLabel] || deLabel(hLabel),
-        a: N2C[aLabel] || deLabel(aLabel),
+        h: hFinal,
+        a: aFinal,
         sH: sH2, sA: sA2,
         scorersH: ps2(apiById.home_scorers),
         scorersA: ps2(apiById.away_scorers),
