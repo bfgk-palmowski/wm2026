@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="WM 2026">
 <meta name="theme-color" content="#06122b">
 <title>WM 2026 – Spielplan</title>
+<meta name="version" content="2026-06-28-v3">
 <style>
 :root {
   --bg:#f0f4f8; --surface:#e2eaf4; --card:#ffffff; --card2:#dce6f0;
@@ -1004,6 +1005,13 @@ function showInstallBanner() {
         <button class="install-close" onclick="this.closest('.install').remove()">✕</button>
       </div>`;
   }
+}
+
+// Force unregister old service workers + clear cache
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
 }
 
 window.addEventListener('load', () => {
